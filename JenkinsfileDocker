@@ -1,0 +1,44 @@
+/** 
+This is to execute in Jenkins pipeline script to 
+Build the package, build the Image,Push it to Docker Hub
+and run the container.
+**/ 
+node{
+    
+        stage('Git Clone') { 
+            git url: 'https://github.com/sanobhai75/we3-spring-boot-project.git', branch: 'master'
+        }  
+       
+        stage(" Maven Clean Package"){
+
+      def mavenHome =  tool name: "Maven", type: "maven"
+
+      def mavenCMD = "${mavenHome}/bin/mvn"
+
+      sh "${mavenCMD} clean package"
+
+        }
+      
+    stage('Build Docker Image'){
+
+        sh 'docker build . -t sanobhai75/we3-spring-boot-project:v.2.0'
+
+    }
+
+    stage('Docker Login And Push'){
+
+       withCredentials([string(credentialsId: 'DOCKER_HUB_CREDENTIAL', variable: 'DOCKER_HUB_CREDENTIAL')]) {
+       sh "docker login -u sanobhai75 -p ${DOCKER_HUB_CREDENTIAL}"
+    }
+       sh "docker push sanobhai75/we3-spring-boot-project:v.2.0"    
+}
+
+    stage('Deploy Application as a Container on Docker_master'){
+        sshagent(['DOCKER_MASTER_CREDENTIAL']) {
+        sh 'ssh -o StrictHostKeyChecking=no ubuntu@172.31.40.64 docker rm -f we3-spring-boot-project || true'
+        sh 'ssh -o StrictHostKeyChecking=no ubuntu@172.31.40.64 docker run -it --rm --name we3-spring-boot-project -p 8090:8080 -d sanobhai75/we3-spring-boot-project:v.2.0'
+}
+    }
+
+
+}
