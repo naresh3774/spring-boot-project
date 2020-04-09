@@ -4,14 +4,14 @@ services:
   springboot:
     image: sanobhai75/we3-spring-boot-project:v2.0
     restart: always
-    container_name: springboot
+    container_name: springbootproject
     ports:
       - 9090:8080
     working_dir: /opt/app
     depends_on:
       - mongo
     deploy:
-      replicas: 2
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 20s
@@ -20,7 +20,7 @@ services:
 
   mongo:
     image: mongo
-    container_name: springboot-mongo
+    container_name: springbootproject-mongo
 #    ports:  # for demo/debug purpose only
 #      - 27018:27017
     volumes:
